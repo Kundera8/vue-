@@ -38,13 +38,19 @@ export const constantRoutes = [
   }
 ]
 
-const router = new Router({
+const createRouter = () => new Router({
   routes: constantRoutes
 })
 
+const router = createRouter()
+
+function resetRouter () {
+  const newRouter = createRouter()
+  router.matcher = newRouter.matcher // the relevant part
+}
+
 /**
  * meta: {
- *  hideInMenu: (false) 设为true后在左侧菜单不会显示该页面选项
  *  role: 可访问该页面的权限数组，当前路由设置的权限会影响子路由
  * }
  */
@@ -81,8 +87,8 @@ export const asyncRoutes = [
         name: 'all',
         component: () => import('@/views/permission/all.vue'),
         meta: {
-          title: '所有权限',
-          roles: ['SUPER_ADMIN', 'ADMIN']
+          title: '所有权限'
+          // roles: ['SUPER_ADMIN', 'ADMIN'] // if do not set roles, means: this page does not require permission
         }
       }
     ]
@@ -106,6 +112,7 @@ router.beforeEach((to, from, next) => {
       store.dispatch('getUserInfo').then(response => {
         /** TODO */
         store.dispatch('generateRoutes', response.operatorBean.roleType).then(accessedRoutes => {
+          resetRouter() // 重置router避免name重名
           router.addRoutes(accessedRoutes) // 根据用户角色，动态添加权限路由
           next({ ...to, replace: true }) // hack方法 确保addRoutes已完成 ,set the replace: true so the navigation will not leave a history record
         })

@@ -29,7 +29,7 @@ service.interceptors.request.use(
     if (config.method === 'get') {
       config.params = trim(config.params)
       // loading
-      store.commit('SET_LOADING_TRUE')
+      store.commit('SET_LOADING', true)
     } else {
       config.data = trim(config.data)
     }
@@ -55,7 +55,7 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   response => {
     // loading
-    store.commit('SET_LOADING_FALSE')
+    store.commit('SET_LOADING', false)
     return response.data
   },
   error => {
@@ -63,7 +63,7 @@ service.interceptors.response.use(
      * 通过 xmlhttprequest 来状态码标识error
      */
     // loading
-    store.commit('SET_LOADING_FALSE')
+    store.commit('SET_LOADING', false)
     console.log('error：' + error.response.data.errorMsg, error.response.status) // for debug
     const data = error.response.data
     const status = error.response.status

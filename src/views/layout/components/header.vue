@@ -1,31 +1,106 @@
 <template>
-  <div class="header">
-    <div class="left">
-      logo
-      <span class="web-title">吉利TSP平台</span>
-    </div>
-    <div class="right">
-      <el-dropdown @command="handleCommand">
-        <div class="dropdown-link">
-          <img :src="imgUrl" class="role-img" />
-          <span class="role">管理员</span>
-          <span class="username">{{userName}}</span>
+  <div>
+    <div class="header-wrapper">
+      <div class="left">
+        <!-- <img :src="logo" class="logo"/> -->
+        <span class="web-title">TSP平台</span>
+      </div>
+      <div class="right">
+        <div class="btn-wrapper" @click="toggleBigScreen" v-if="$route.path === '/index'">
+          <img :src="isBigScreen ? bigScreenSrc2 : bigScreenSrc1">
+          <span v-show="isBigScreen" class="text">小屏展示</span>
+          <span v-show="!isBigScreen" class="text">大屏展示</span>
         </div>
-        <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item command="resetPwd">修改密码</el-dropdown-item>
-          <el-dropdown-item command="logout">退出</el-dropdown-item>
-        </el-dropdown-menu>
-      </el-dropdown>
+        <el-dropdown @command="handleCommand">
+          <div class="dropdown-link">
+            <img :src="avatar" class="role-img" />
+            <div>
+              <div class="role">{{role}}</div>
+              <div class="username">{{userName}}</div>
+            </div>
+          </div>
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item command="resetPwd">修改密码</el-dropdown-item>
+            <el-dropdown-item command="logout">退出</el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
+      </div>
+    </div>
+    <div v-if="resetVisible">
+      <el-dialog
+      class="modify-password"
+      title="修改密码"
+      width="460px"
+      :visible.sync="resetVisible"
+      @close="resetPwdClose">
+        <el-form
+          label-width="100px"
+          label-position="right："
+          ref="userModify"
+          :model="userModify" :rules="rules">
+          <el-form-item label="用户名：" prop="name">
+            <el-input v-model="userName" disabled></el-input>
+          </el-form-item>
+          <el-form-item label="原始密码：" prop="oldPassword">
+            <el-input type="password" v-model="userModify.oldPassword" placeholder="请输入原始密码" clearable></el-input>
+          </el-form-item>
+          <el-form-item label="新密码：" prop="newPassword">
+            <el-input type="password" v-model="userModify.newPassword" placeholder="请输入新密码" clearable></el-input>
+          </el-form-item>
+          <el-form-item label="确认密码：" prop="checkPass">
+            <el-input type="password" v-model="userModify.checkPass" placeholder="请再次输入新密码" clearable></el-input>
+          </el-form-item>
+          <div class="txt-center">
+            <el-button size="small" @click="resetPwdClose()">取消</el-button>
+            <el-button size="small" type="primary"  @click="comfirmReset('userModify')">确定</el-button>
+          </div>
+        </el-form>
+      </el-dialog>
     </div>
   </div>
 </template>
 <script>
+import { toggleFullScreen, isFullScreen } from '@/utils'
+import { modifyPassword } from '@/api/login'
+import RULE from '@/utils/validate'
 export default {
   name: 'headerComp',
   data () {
+    /* 检查两次密码输入是否一致 */
+    const checkPassword = (rule, value, callback) => {
+      if (!value) {
+        callback(new Error('请再次输入密码'))
+      } else if (value !== this.userModify.newPassword) {
+        callback(new Error('两次输入密码不一致'))
+      } else {
+        callback()
+      }
+    }
     return {
       resetVisible: false,
-      imgUrl: require('@/assets/images/head.png')
+      logo: require('@/assets/images/logo.png'),
+      avatar: require('@/assets/images/avatar.png'),
+      bigScreenSrc1: require('@/assets/images/out-hover.png'),
+      bigScreenSrc2: require('@/assets/images/in-hover.png'),
+      userModify: {
+        oldPassword: '',
+        newPassword: '',
+        checkPass: ''
+      },
+      rules: {
+        oldPassword: [
+          { message: '请输入原始密码', trigger: 'blur', required: true },
+          { validator: RULE.checkOTAPass, trigger: 'blur' }
+        ],
+        newPassword: [
+          { required: true, message: '请输入新密码', trigger: 'blur' },
+          { validator: RULE.checkOTAPass, trigger: 'blur' }
+        ],
+        checkPass: [
+          { required: true, message: '请确认新密码', trigger: 'blur' },
+          { validator: checkPassword, trigger: 'blur' }
+        ]
+      }
     }
   },
   methods: {
@@ -40,38 +115,129 @@ export default {
       this.$confirm('确认退出吗?', '提示', {
         type: 'warning'
       }).then(() => {
-        this.$store.dispatch('handleLogOut').then(() => {
-          this.$router.push('/login')
-        })
+        this.$store.dispatch('handleLogOut')
       })
+    },
+    resetPwdClose () {
+      this.$refs['userModify'].resetFields()
+      this.resetVisible = false
+    },
+    comfirmReset (form) {
+      this.$refs[form].validate((valid) => {
+        if (valid) {
+          const data = {
+            newPassword: this.userModify.newPassword,
+            oldPassword: this.userModify.oldPassword
+          }
+          modifyPassword(data).then(res => {
+            this.$message({
+              type: 'success',
+              showClose: true,
+              message: '修改密码成功,请重新登录！'
+            })
+            this.resetVisible = false
+            this.$store.dispatch('handleLogOut')
+          })
+        }
+      })
+    },
+    toggleBigScreen () {
+      this.$store.commit('TOGGLE_BIG_SCREEN')
+      // 浏览器全屏
+      toggleFullScreen()
+    },
+    // 全屏事件处理方法
+    fullScreenHandler () {
+      if (isFullScreen()) {
+        if (!this.isBigScreen) {
+          this.$store.commit('TOGGLE_BIG_SCREEN')
+        }
+      } else {
+        if (this.isBigScreen) {
+          this.$store.commit('TOGGLE_BIG_SCREEN')
+        }
+      }
     }
   },
   computed: {
+    isBigScreen () { return this.$store.getters.isBigScreen },
+    role () { return this.$store.getters.operatorBean.roleType },
     userName () { return this.$store.getters.operatorBean.name }
+  },
+  mounted () {
+    // 监听全屏事件
+    document.addEventListener('fullscreenchange', this.fullScreenHandler)
+    document.addEventListener('webkitfullscreenchange', this.fullScreenHandler)
+    document.addEventListener('mozfullscreenchange', this.fullScreenHandler)
+    document.addEventListener('MSFullscreenChange', this.fullScreenHandler)
   }
 }
 </script>
 <style lang="scss" scoped>
-  .header {
+  .header-wrapper {
     display: flex;
     justify-content: space-between;
     height: 62px;
-    line-height: 62px;
-    padding: 0 24px;
-    background-color: aquamarine;
-    // .left {}
+    padding: 0 20px 0 36px;
+    background: #1D2B36;
+    .left {
+      line-height: 62px;
+      .logo {
+        vertical-align: 0;
+      }
+      .web-title {
+        font-size: 23px;
+        font-family: MicrosoftYaHeiUI-Bold;
+        font-weight: bold;
+        color: #fff;
+        margin-left: 40px;
+        letter-spacing: 1px;
+      }
+    }
     .right {
+      display: flex;
+      align-items: center;
+      .btn-wrapper {
+        display: flex;
+        align-items: center;
+        height: 40px;
+        padding: 0 14px;
+        border-radius: 4px;
+        background: #2F70F7;
+        cursor: pointer;
+        .text {
+          color: #fff;
+          font-size: 12px;
+          font-weight: bold;
+          padding-left: 10px;
+        }
+      }
+      .btn-wrapper:hover {
+        opacity: 0.8;
+      }
       .dropdown-link {
         display: flex;
         align-items: center;
+        font-size: 12px;
         .role-img {
           width: 40px;
           max-width: 100%;
+          margin: 0 12px 0 40px;
         }
         .role {
-          padding: 0 20px;
+          font-family: MicrosoftYaHeiUI-Bold;
+          font-weight: bold;
+          color: #249AFF;
+        }
+        .username {
+          font-family: MicrosoftYaHeiUI;
+          color: #FFFFFF;
         }
       }
     }
+  }
+  // 修改密码
+  .txt-center {
+    text-align: center;
   }
 </style>

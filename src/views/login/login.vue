@@ -1,6 +1,6 @@
 <template>
   <div class="page-container">
-    <div class="background">
+    <div class="background" v-if="supportVue">
       <div class="content">
         <el-form
           ref="loginForm"
@@ -9,8 +9,7 @@
           :rules="rules"
           :hide-required-asterisk="true"
           label-position="top"
-          @keyup.enter.native="submitForm()"
-          v-if="show">
+          @keyup.enter.native="submitForm()">
           <h1>登录</h1>
           <el-form-item label="账号" prop="username">
             <el-input v-model="loginForm.username" placeholder="请输入用户名"><i slot="prefix" class="iconfont icon-Mask3"></i></el-input>
@@ -32,7 +31,6 @@
             <el-button v-else>登录中...</el-button>
           </div>
         </el-form>
-        <compatible-Component v-else></compatible-Component>
         <div class="footer">
           <span class="footer-link left">中移物联网有限公司版权所有&copy;2018 All Rights Reserved</span>
           <a href="http://www.miitbeian.gov.cn" class="footer-link center" target="_blank">渝ICP备13005647号</a>
@@ -40,28 +38,31 @@
         </div>
       </div>
       <div class="logo">
-        <div><span class="orgName">吉利</span>&nbsp;&nbsp;<span class="sysName">新能源商用车远程管理平台</span></div>
+        <div><span class="orgName"></span>&nbsp;&nbsp;<span class="sysName">新能源商用车远程管理平台</span></div>
         <hr />
         <!-- <img class="fr" src="../../assets/image/login/logo.png"> -->
       </div>
     </div>
+    <!-- 兼容性组件 -->
+    <compatible-Component v-else></compatible-Component>
   </div>
 </template>
 <script>
 import RULE from '@/utils/validate'
-import compatibleComponent from '@/components/common/compatible'
-import router from '@/router/index'
+import { supportVue } from '@/utils/auth'
+import compatibleComponent from '@/components/compatible'
 export default {
   name: 'login',
   data () {
     return {
+      supportVue: supportVue(),
       loginStatus: true,
       validateCodeSRC: '',
       loginForm: {
         // username: localStorage.getItem('LG_UN'),
         username: '',
-        password: ''
-        // authCode: ''
+        password: '',
+        authCode: ''
       },
       rules: {
         username: [
@@ -71,66 +72,33 @@ export default {
         password: [
           { required: true, message: '请输入密码', trigger: 'blur' },
           { validator: RULE.checkOTAPass, trigger: 'blur' }
+        ],
+        authCode: [
+          { required: true, message: '请输入验证码', trigger: 'blur' },
+          { max: 4, min: 4, message: '请输入4位验证码', trigger: 'blur' }
         ]
-        // authCode: [
-        //   { required: true, message: '请输入验证码', trigger: 'blur' },
-        //   { max: 4, min: 4, message: '请输入4位验证码', trigger: 'blur' }
-        // ]
       }
     }
   },
   components: {compatibleComponent},
   methods: {
-    /* supportVue () {
-      let agent = navigator.userAgent.toLowerCase()
-      let regStrIE = /msie [\d.]+;/gi
-      let regStrFF = /firefox\/[\d.]+/gi
-      let regStrChrome = /chrome\/[\d.]+/gi
-      let regStrSAF = /safari\/[\d.]+/gi
-      let regStrOpera = /opr\/[\d.]+/gi
-      let regStrEdge = /edge\/[\d.]+/gi
-      let supportVue = true
-      if (agent.indexOf('msie') > 0 && this.getVersion(regStrIE) < 10) {
-        supportVue = false
-      }
-      if (agent.indexOf('firefox') > 0 && this.getVersion(regStrFF) < 21) {
-        supportVue = false
-      }
-      if (agent.indexOf('safari') > 0 && agent.indexOf('chrome') < 0 && this.getVersion(regStrSAF) < 6) {
-        supportVue = false
-      }
-      if (agent.indexOf('chrome') > 0 && agent.indexOf('opr') < 0 && this.getVersion(regStrChrome) < 23) {
-        supportVue = false
-      }
-      if (agent.indexOf('opr') > 0 && this.getVersion(regStrOpera) < 15) {
-        supportVue = false
-      }
-      if (agent.indexOf('edge') > 0 && this.getVersion(regStrEdge) < 12) {
-        supportVue = false
-      }
-      return supportVue
-    }, */
-    getVersion (RegStr) {
-      return parseInt((navigator.userAgent.toLowerCase().match(RegStr) + '').replace(/[^0-9.]/ig, ''))
+    createCode () {
+      this.loginForm.authCode = ''
+      const time = new Date().getTime()
+      localStorage.setItem('LG_TM', time)
+      let getValidate = '/api/v0/web/authcode' // 获取图片验证码
+      this.validateCodeSRC = `${getValidate}?time=${time}`
     },
-    // createCode () {
-    //   this.loginForm.authCode = ''
-    //   const time = new Date().getTime()
-    //   localStorage.setItem('LG_TM', time)
-    //   let getValidate = '/api/v0/web/authcode' // 获取图片验证码
-    //   this.validateCodeSRC = `${getValidate}?time=${time}`
-    // },
     submitForm () {
       this.$refs['loginForm'].validate((valid) => {
         if (valid) {
           this.loginStatus = false
-          // const time = localStorage.getItem('LG_TM')
-          // const data = { ...this.loginForm, time }
-          const data = { ...this.loginForm }
+          const time = localStorage.getItem('LG_TM')
+          const data = { ...this.loginForm, time }
           this.$store.dispatch('handleLogin', data).then(res => {
             // localStorage.setItem('US_ID', res.operatorBean.uuid)
             // localStorage.setItem('LG_UN', res.operatorBean.username)
-            router.push('/index')
+            this.$router.push('/index')
           }).catch(() => {
             // this.createCode()
             this.loginStatus = true
@@ -138,12 +106,10 @@ export default {
         }
       })
     }
-  }
-  /* created () {
-    this.show = this.supportVue()
-    !this.show && this.$store.commit('GET_LOGIN_TITLE', '浏览器不支持平台')
+  },
+  created () {
     // this.createCode()
-  } */
+  }
 }
 </script>
 <style lang="scss" scoped>

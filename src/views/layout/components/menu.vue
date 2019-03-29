@@ -50,30 +50,27 @@
 <script>
 export default {
   name: 'menuComp',
-  data () {
-    return {
-      isCollapse: false
-    }
-  },
   methods: {
+    // 菜单折叠
     collapseMenu () {
-      this.isCollapse = !this.isCollapse
+      this.$store.commit('TOGGLE_MENU', !this.isCollapse)
     },
-    // 屏幕宽度 <= 1200 菜单默认折叠
-    resizeCollapse () {
-      if (window.innerWidth <= 1200) {
-        this.isCollapse = true
+    // 屏幕宽度 <= 1366 菜单默认折叠
+    toggleMenuCollapse () {
+      if (window.innerWidth <= 1366) {
+        this.$store.commit('TOGGLE_MENU', true)
       } else {
-        this.isCollapse = false
+        this.$store.commit('TOGGLE_MENU', false)
       }
     }
   },
   computed: {
-    routes () { return this.$store.getters.routes }
+    routes () { return this.$store.getters.routes },
+    isCollapse () { return this.$store.getters.isCollapse }
   },
   mounted () {
-    this.resizeCollapse()
-    window.addEventListener('resize', this.resizeCollapse)
+    this.toggleMenuCollapse()
+    window.addEventListener('resize', this.toggleMenuCollapse)
   }
 }
 </script>

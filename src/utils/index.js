@@ -46,3 +46,39 @@ export const trim = (obj = {}) => {
 export const isEmptyObj = (obj = {}) => {
   return (Object.keys(obj).length === 0 && obj.constructor === Object)
 }
+
+// 切换全屏
+export const toggleFullScreen = () => {
+  if (!isFullScreen()) {
+    // 进入全屏状态
+    const el = document.documentElement
+    if (el.requestFullscreen) {
+      el.requestFullscreen()
+    } else if (el.msRequestFullscreen) {
+      el.msRequestFullscreen()
+    } else if (el.mozRequestFullScreen) {
+      el.mozRequestFullScreen()
+    } else if (el.webkitRequestFullscreen) {
+      el.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT)
+    }
+  } else {
+    // 退出全屏状态
+    if (document.exitFullscreen) {
+      document.exitFullscreen()
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen()
+    } else if (document.mozCancelFullScreen) {
+      document.mozCancelFullScreen()
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen()
+    }
+  }
+}
+
+// 判断是否处于全屏状态
+export const isFullScreen = () => {
+  return document.fullscreenElement ||
+    document.mozFullScreenElement ||
+    document.webkitFullscreenElement ||
+    document.msFullscreenElement
+}

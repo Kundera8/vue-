@@ -1,4 +1,4 @@
-# webcontent-geely
+# webcontent
 
 > A Vue.js project
 

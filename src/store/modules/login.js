@@ -1,5 +1,6 @@
 import { login, logout, getUserInfo } from '@/api/login'
 import { setToken, getToken, removeToken } from '@/utils/auth'
+import router from '@/router'
 
 export default {
   state: {
@@ -35,9 +36,11 @@ export default {
     handleLogOut ({ commit }) {
       return new Promise((resolve, reject) => {
         logout().then(() => {
-          commit('SET_TOKEN', '')
-          commit('SET_OPERATORBEAN', {})
           removeToken()
+          commit('SET_TOKEN', '')
+          // 先转跳再清空角色和用户名
+          router.push('/login')
+          commit('SET_OPERATORBEAN', {})
           resolve()
         }).catch(error => {
           reject(error)
