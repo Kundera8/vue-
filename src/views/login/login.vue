@@ -32,13 +32,13 @@
           </div>
         </el-form>
         <div class="footer">
-          <span class="footer-link left">中移物联网有限公司版权所有&copy;2018 All Rights Reserved</span>
-          <a href="http://www.miitbeian.gov.cn" class="footer-link center" target="_blank">渝ICP备13005647号</a>
+          <span class="footer-link left">有限公司版权所有&copy;2018 All Rights Reserved</span>
+          <a href="http://www.miitbeian.gov.cn" class="footer-link center" target="_blank"></a>
           <!-- <a href="http://www.miitbeian.gov.cn" class="footer-link right" target="_blank"><img src="../../assets/image/beian20-20.png">渝公网安备50010802002065号</a> -->
         </div>
       </div>
       <div class="logo">
-        <div><span class="orgName"></span>&nbsp;&nbsp;<span class="sysName">新能源商用车远程管理平台</span></div>
+        <div><span class="orgName"></span>&nbsp;&nbsp;<span class="sysName">平台</span></div>
         <hr />
         <!-- <img class="fr" src="../../assets/image/login/logo.png"> -->
       </div>
