@@ -2,7 +2,7 @@
   "name": "webcontent",
   "version": "1.0.0",
   "description": "A Vue.js project",
-  "author": "陈琪 <chenqi1@cmiot.chinamobile.com>",
+  "author": "",
   "private": true,
   "scripts": {
     "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
